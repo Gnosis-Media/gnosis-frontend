@@ -4,20 +4,21 @@ import './AuthPages.css'; // Reuse the same CSS for the unified page
 function AuthPage() {
   const [isLogin, setIsLogin] = useState(true); // State to toggle between login and signup
   const [username, setUsername] = useState(''); // For both login and signup
-  const [email, setEmail] = useState('');       // For signup
+  const [email, setEmail] = useState(''); // For signup
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
+  const Lport = 5000;
 
   // Handle form submit for both login and signup
   const handleAuth = async (e) => {
     e.preventDefault();
     const endpoint = isLogin ? '/api/login' : '/api/register'; // Toggle API endpoint
     const payload = isLogin
-      ? { username, password }      // Login payload
+      ? { username, password } // Login payload
       : { username, email, password }; // Signup payload
 
     try {
-      const response = await fetch(`http://localhost:5000${endpoint}`, {
+      const response = await fetch(`http://127.0.0.1:${Lport}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
