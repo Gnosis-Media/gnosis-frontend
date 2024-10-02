@@ -1,0 +1,65 @@
+/* src/pages/FeedPage.css */
+
+/* Full page container with background image */
+.feed-container {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-image: url('/public/background3.jpg'); /* Replace with your actual image path */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+  }
+  
+  /* Feed card floating on top of the background */
+  .feed-card {
+    background-color: #674EA7;
+    width: 80%;
+    max-width: 800px;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.2); /* Adds a shadow for floating effect */
+    z-index: 1; /* Ensures the card is above the background */
+    text-align: center;
+    position: relative;
+  }
+  
+  /* Empty feed state styling */
+  .empty-feed {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .empty-icon {
+    font-size: 50px; /* Adjust the size of the icon */
+    color: lightgray;
+    margin-bottom: 20px;
+  }
+  
+  .feed-message {
+    font-family: 'Roboto', sans-serif;
+    color: white;
+    font-size: 18px;
+    margin: 0;
+  }
+  
+  /* Styling for the actual feed items */
+  .feed-item {
+    margin-bottom: 20px;
+  }
+  
+  .feed-item h3 {
+    margin: 0 0 10px;
+    font-size: 24px;
+  }
+  
+  .feed-item p {
+    margin: 0;
+    font-size: 16px;
+    color: white;
+  }
+  
