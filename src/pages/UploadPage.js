@@ -6,6 +6,7 @@ function UploadPage() {
   const [content, setContent] = useState(null);
   const [fileName, setFileName] = useState(''); // Store the file name for preview
   const [message, setMessage] = useState(''); // Store any messages (success/error)
+  const Uport = 5001;
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -23,7 +24,8 @@ function UploadPage() {
     formData.append('file', content);
 
     try {
-      const response = await fetch('http://localhost:5000/api/upload', { // Ensure this points to your Flask server
+      const response = await fetch(`http://127.0.0.1:${Uport}/api/upload`, {
+        // Ensure this points to your Flask server
         method: 'POST',
         body: formData,
       });
@@ -71,8 +73,6 @@ function UploadPage() {
 
         {/* Display message */}
         {message && <h3>{message}</h3>}
-
-
       </div>
     </div>
   );

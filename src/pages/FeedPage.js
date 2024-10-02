@@ -5,12 +5,14 @@ import './FeedPage.css';
 
 function FeedPage() {
   const [feed, setFeed] = useState(null); // Feed starts as null, simulating no database connection
-
+  const cPort = 5002;
   useEffect(() => {
     // Fetch conversations from the Flask API
     const fetchFeed = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/get_convos'); // Replace localhost if necessary
+        const response = await axios.get(
+          `http://localhost:${cPort}/api/get_convos`
+        ); // Replace localhost if necessary
         setFeed(response.data);
       } catch (error) {
         console.error('Error fetching conversations:', error);
@@ -25,7 +27,10 @@ function FeedPage() {
     <div className="feed-container">
       <div className="feed-card">
         {feed === null ? (
-          <p className="feed-message">Uh-oh, there seems to be an issue. We're working on getting you connected soon!</p>
+          <p className="feed-message">
+            Uh-oh, there seems to be an issue. We're working on getting you
+            connected soon!
+          </p>
         ) : feed.length > 0 ? (
           feed.map((item, index) => (
             <div key={index} className="feed-item">
@@ -44,20 +49,6 @@ function FeedPage() {
 }
 
 export default FeedPage;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /*
 // src/pages/FeedPage.js
@@ -163,5 +154,3 @@ function FeedPage() {
 }
 
 export default FeedPage; */
-
-
