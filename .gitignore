@@ -1,5 +1,4 @@
-# amplify
 node_modules
-.amplify
-amplify_outputs*
-amplifyconfiguration*
+build
+yarn.lock
+package-lock.json
