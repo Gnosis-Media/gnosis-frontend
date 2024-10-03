@@ -6,12 +6,16 @@ import './FeedPage.css';
 function FeedPage() {
   const [feed, setFeed] = useState(null); // Feed starts as null, simulating no database connection
   const cPort = 5002;
+  const local_url = 'http://127.0.0.1:5000/api/get_convos';
+  const remote_url = 'http://54.165.240.60:5000/api/get_convos';
+
+
   useEffect(() => {
     // Fetch conversations from the Flask API
     const fetchFeed = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:${cPort}/api/get_convos`
+          remote_url
         ); // Replace localhost if necessary
         setFeed(response.data);
       } catch (error) {

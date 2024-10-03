@@ -8,6 +8,8 @@ function AuthPage() {
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const Lport = 5000;
+  const local_url = 'http://127.0.0.1:5000';
+  const remote_url = 'http://3.86.58.152:5000';
 
   // Handle form submit for both login and signup
   const handleAuth = async (e) => {
@@ -18,7 +20,8 @@ function AuthPage() {
       : { username, email, password }; // Signup payload
 
     try {
-      const response = await fetch(`http://127.0.0.1:${Lport}${endpoint}`, {
+      console.log("sending request to " + remote_url + endpoint)
+      const response = await fetch(remote_url + endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
