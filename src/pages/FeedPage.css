@@ -1,35 +1,31 @@
 /* src/pages/FeedPage.css */
 
-/* Full page container with background image */
-/* Full page container with background image */
 .feed-container {
   height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  background-image: url('/public/background3.jpg'); /* Replace with your actual image path */
+  background-image: url('/public/background3.jpg');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
   position: relative;
 }
 
-/* Feed card floating on top of the background */
 .feed-card {
   background-color: #674EA7;
   width: 80%;
   max-width: 800px;
-  max-height: 70vh; /* Limits the height to 70% of the viewport height */
+  max-height: 70vh;
   padding: 30px;
   border-radius: 15px;
-  box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.2); /* Adds a shadow for floating effect */
-  z-index: 1; /* Ensures the card is above the background */
+  box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.2);
+  z-index: 1;
   text-align: center;
   position: relative;
-  overflow-y: auto; /* Makes the content scrollable */
+  overflow-y: auto;
 }
 
-/* Empty feed state styling */
 .empty-feed {
   display: flex;
   flex-direction: column;
@@ -38,7 +34,7 @@
 }
 
 .empty-icon {
-  font-size: 50px; /* Adjust the size of the icon */
+  font-size: 50px;
   color: lightgray;
   margin-bottom: 20px;
 }
@@ -50,9 +46,11 @@
   margin: 0;
 }
 
-/* Styling for the actual feed items */
 .feed-item {
   margin-bottom: 20px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 20px;
 }
 
 .feed-item h3 {
@@ -66,14 +64,104 @@
   color: white;
 }
 
-/* Optional: Custom scrollbar styling */
+/* Custom scrollbar styling */
 .feed-card::-webkit-scrollbar {
   width: 8px;
 }
 
 .feed-card::-webkit-scrollbar-thumb {
-  background-color: #ffffff40; /* Semi-transparent white scrollbar */
+  background-color: #ffffff40;
   border-radius: 10px;
 }
 
-  
+/* New styles for replies section */
+.replies-section {
+  margin-top: 15px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  padding-top: 15px;
+}
+
+.replies-section h4 {
+  color: white;
+  margin: 0 0 10px 0;
+  font-size: 16px;
+}
+
+.reply-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  margin: 8px 0;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+.reply-item p {
+  margin: 0;
+  color: white;
+}
+
+.reply-input-section {
+  margin-top: 15px;
+}
+
+.reply-textarea {
+  width: 100%;
+  min-height: 60px;
+  padding: 12px;
+  margin-bottom: 10px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: white;
+  font-family: 'Roboto', sans-serif;
+  font-size: 14px;
+  resize: vertical;
+}
+
+.reply-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.reply-button {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: 'Roboto', sans-serif;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.reply-button:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.delete-button {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 4px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s;
+  margin-left: 10px;
+}
+
+.delete-button:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+}
+
+.error-message {
+  color: #ffcdd2;
+  background-color: rgba(255, 0, 0, 0.2);
+  padding: 8px 12px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  text-align: center;
+  font-family: 'Roboto', sans-serif;
+}
