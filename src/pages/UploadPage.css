@@ -1,38 +1,28 @@
-/* Full page container with background image */
 .upload-container {
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-image: url('/public/background3.jpg'); /* Replace with the correct image path */
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    position: relative;
-  }
-  
-  /* Upload form card floating on top of the background */
-  .upload-card {
-    background-color: #674EA7;
-    width: 90%;
-    max-width: 400px;
-    padding: 30px;
-    border-radius: 15px;
-    box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.2); /* Floating effect */
-    z-index: 1;
-    text-align: center;
-    position: relative;
-  }
-  
-  .upload-card h2 {
-    font-family: 'Roboto', sans-serif;
-    font-size: 24px;
-    color: white;
-    margin-bottom: 20px;
-  }
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+  background-image: url('/public/background3.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+}
 
+.upload-card {
+  background-color: #674EA7;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
 
-  /* Custom-styled file upload button */
 .custom-file-upload {
   width: 100%;
   padding: 10px;
@@ -44,47 +34,99 @@
   cursor: pointer;
   transition: background-color 0.3s ease;
   margin-bottom: 20px;
-  }
-  
-  /* Hover effect for the custom file upload button */
-  .custom-file-upload:hover {
-    background-color: #573D96;
-  }
+}
 
-  
-  .upload-card input {
-    width: 100%;
-    padding: 15px;
-    margin: 10px 0;
-    border-radius: 10px;
-    border: 1px solid #ccc;
-    font-family: 'Roboto', sans-serif;
-    font-size: 16px;
-  }
-  
-  
-  .upload-card button {
-    margin-top: 20px;
-    width: 100%;
-    padding: 15px;
-    background-color: #8061d0;
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  
-  .upload-card button:hover {
-    background-color: #573D96;
-  }
+.custom-file-upload:hover {
+  background-color: #573D96;
+}
 
-  .upload-card h3 {
-    font-family: 'Roboto', sans-serif;
-    font-size: 15px;
-    color: white;
-    margin-top: 20px;
-    margin-bottom: 20px;
+.file-preview {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.file-preview h3 {
+  font-family: 'Roboto', sans-serif;
+  font-size: 15px;
+  color: white;
+  margin: 0;
+}
+
+button {
+  width: 100%;
+  padding: 15px;
+  background-color: #8061d0;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-top: 20px;
+}
+
+button:disabled {
+  background-color: #573D96;
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+button:hover:not(:disabled) {
+  background-color: #573D96;
+}
+
+.status-message {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: 10px;
+  text-align: center;
+  color: white;
+}
+
+.status-message.accepted {
+  background-color: rgba(255, 243, 205, 0.2);
+}
+
+.status-message.completed {
+  background-color: rgba(212, 237, 218, 0.2);
+}
+
+.status-message.failed {
+  background-color: rgba(248, 215, 218, 0.2);
+}
+
+.upload-progress {
+  margin-top: 1rem;
+  height: 4px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background-color: #8061d0;
+  animation: progress-animation 2s infinite linear;
+  width: 30%;
+}
+
+@keyframes progress-animation {
+  0% {
+      transform: translateX(-100%);
   }
-  
+  100% {
+      transform: translateX(400%);
+  }
+}
+
+.error-message {
+  color: white;
+  background-color: rgba(248, 215, 218, 0.2);
+  border: 1px solid rgba(245, 198, 203, 0.3);
+  padding: 1rem;
+  border-radius: 10px;
+  margin: 1rem 0;
+  text-align: center;
+}

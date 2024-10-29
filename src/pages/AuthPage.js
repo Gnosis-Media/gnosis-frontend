@@ -1,52 +1,67 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate for navigation
-import './AuthPages.css'; // Reuse the same CSS for the unified page
+import { useNavigate } from 'react-router-dom';
+import './AuthPages.css';
 
 function AuthPage() {
-  const [isLogin, setIsLogin] = useState(true); // State to toggle between login and signup
-  const [username, setUsername] = useState(''); // For both login and signup
-  const [email, setEmail] = useState(''); // For signup
+  const [isLogin, setIsLogin] = useState(true);
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
-  const remote_url = 'http://3.86.58.152:5000'; // Update as necessary
-  const navigate = useNavigate(); // For redirection after successful login/signup
+  // Update the URL to point to the composer service instead of directly to the auth service
+  const composerUrl = 'http://localhost:5001'; // Update this to match your composer's actual URL
+  const navigate = useNavigate();
 
-  // Handle form submit for both login and signup
   const handleAuth = async (e) => {
     e.preventDefault();
 
-    // Check for test credentials
+    // Keep test credentials for development
     if (isLogin && username === 'root' && password === 'root') {
-      localStorage.setItem('token', 'test-token'); // Simulate token storage
-      setMessage('Login successful!'); // Success message
-      navigate('/'); // Redirect to the home or feed page
+      localStorage.setItem('token', 'test-token');
+      localStorage.setItem('username', username); // Store username for use in the app
+      setMessage('Login successful!');
+      navigate('/');
       return;
     }
 
-    const endpoint = isLogin ? '/api/login' : '/api/register'; // Toggle API endpoint
+    const endpoint = isLogin ? '/api/login' : '/api/register';
     const payload = isLogin
-      ? { username, password } // Login payload
-      : { username, email, password }; // Signup payload
+      ? { username, password }
+      : { username, email, password };
 
     try {
-      console.log("sending request to " + remote_url + endpoint);
-      const response = await fetch(remote_url + endpoint, {
+      console.log("sending request to " + composerUrl + endpoint);
+      const response = await fetch(composerUrl + endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        credentials: 'include', // Include credentials if you're using cookies
         body: JSON.stringify(payload),
       });
 
       const data = await response.json();
       if (response.ok) {
         setMessage(isLogin ? 'Login successful!' : 'Signup successful!');
-        localStorage.setItem('token', data.token); // Store token from actual response
-        navigate('/'); // Redirect to the home or feed page
-      } else if (isLogin) {
-        setMessage("Sorry, we don't recognize that username and/or password");
+        if (data.token) {
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('username', username);
+          if (data.user_id) {
+            localStorage.setItem('user_id', data.user_id);
+          }
+        }
+        navigate('/');
       } else {
-        setMessage(data.error || 'An error occurred. Please try again.');
+        // Handle specific error messages from the server
+        const errorMessage = data.error || data.message || 'An error occurred. Please try again.';
+        setMessage(isLogin 
+          ? "Sorry, we don't recognize that username and/or password" 
+          : errorMessage
+        );
       }
     } catch (error) {
+      console.error('Auth error:', error);
       setMessage('Server error. Please try again later.');
     }
   };
@@ -58,7 +73,6 @@ function AuthPage() {
           <img src="/logo.png" alt="App Logo" style={{ width: '100px', height: 'auto' }} />
         </h2>
         <form onSubmit={handleAuth}>
-          {/* Common username field for both login and signup */}
           <input
             type="text"
             placeholder="Username"
@@ -67,7 +81,6 @@ function AuthPage() {
             required
           />
 
-          {/* Only show email input if the user is signing up */}
           {!isLogin && (
             <input
               type="email"
@@ -89,7 +102,6 @@ function AuthPage() {
           <button type="submit">{isLogin ? 'Login' : 'Signup'}</button>
         </form>
 
-        {/* Toggle between login and signup */}
         <h3>
           <button 
             className="toggle-auth-button" 
@@ -99,7 +111,6 @@ function AuthPage() {
           </button>
         </h3>
 
-        {/* Display message after submission */}
         {message && <p className="auth-message">{message}</p>}
       </div>
     </div>

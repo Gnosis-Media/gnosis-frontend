@@ -9,17 +9,34 @@ function FeedPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   
-  const remote_url = 'http://54.165.240.60:8000/api'; // Updated port to match API
-  const userId = 1; // Replace with actual user authentication
+  // Update URL to point to composer service
+  const composerUrl = 'http://localhost:5001/api';
+  
+  // Get userId from localStorage (set during login)
+  const userId = localStorage.getItem('user_id');
+  const token = localStorage.getItem('token');
+
+  // Configure axios defaults
+  const axiosConfig = {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    }
+  };
 
   useEffect(() => {
+    if (!userId) {
+      setError('Please log in to view conversations');
+      return;
+    }
     fetchFeed();
-  }, [page]);
+  }, [page, userId]);
 
   const fetchFeed = async () => {
     try {
-      // Using the correct endpoint with userId and pagination
-      const response = await axios.get(`${remote_url}/convos`, {
+      const response = await axios.get(`${composerUrl}/convos`, {
+        ...axiosConfig,
         params: {
           userId: userId,
           page: page,
@@ -32,11 +49,18 @@ function FeedPage() {
         return;
       }
 
-      setFeed(response.data.conversations);
-      setTotalPages(response.data.total_pages);
+      // Handle the response structure from the composer
+      const data = response.data;
+      setFeed(Array.isArray(data.conversations) ? data.conversations : []);
+      setTotalPages(data.total_pages || 1);
+      setError('');
     } catch (error) {
       console.error('Error fetching conversations:', error);
-      setError('Failed to load conversations. Please try again.');
+      if (error.response?.status === 401) {
+        setError('Please log in again to continue.');
+      } else {
+        setError('Failed to load conversations. Please try again.');
+      }
       setFeed([]);
     }
   };
@@ -56,9 +80,10 @@ function FeedPage() {
     }
 
     try {
-      await axios.put(`${remote_url}/convos/${conversationId}`, {
-        reply: replyContent
-      });
+      await axios.put(`${composerUrl}/convos/${conversationId}`, {
+        reply: replyContent,
+        userId: userId // Include userId in the request
+      }, axiosConfig);
 
       // Clear the reply input for this conversation
       setNewReply(prev => ({
@@ -71,18 +96,34 @@ function FeedPage() {
       setError('');
     } catch (error) {
       console.error('Error adding reply:', error);
-      setError('Failed to add reply. Please try again.');
+      if (error.response?.status === 401) {
+        setError('Please log in again to continue.');
+      } else {
+        setError('Failed to add reply. Please try again.');
+      }
     }
   };
 
   const handleDeleteConversation = async (conversationId) => {
     try {
-      await axios.delete(`${remote_url}/convos/${conversationId}`);
+      await axios.delete(`${composerUrl}/convos/${conversationId}`, axiosConfig);
       await fetchFeed();
       setError('');
     } catch (error) {
       console.error('Error deleting conversation:', error);
-      setError('Failed to delete conversation. Please try again.');
+      if (error.response?.status === 401) {
+        setError('Please log in again to continue.');
+      } else {
+        setError('Failed to delete conversation. Please try again.');
+      }
+    }
+  };
+
+  const formatDate = (dateString) => {
+    try {
+      return new Date(dateString).toLocaleString();
+    } catch (error) {
+      return 'Invalid date';
     }
   };
 
@@ -91,7 +132,9 @@ function FeedPage() {
       <div className="feed-card">
         {error && <p className="error-message">{error}</p>}
         
-        {feed === null ? (
+        {!userId ? (
+          <p className="feed-message">Please log in to view conversations.</p>
+        ) : feed === null ? (
           <p className="feed-message">Loading conversations...</p>
         ) : feed.length > 0 ? (
           <>
@@ -99,8 +142,8 @@ function FeedPage() {
               <div key={item.id} className="feed-item">
                 <p>Conversation ID: {item.id}</p>
                 <p>User ID: {item.user_id}</p>
-                <p>Start Date: {new Date(item.start_date).toLocaleString()}</p>
-                <p>Last Update: {new Date(item.last_update).toLocaleString()}</p>
+                <p>Start Date: {formatDate(item.start_date)}</p>
+                <p>Last Update: {formatDate(item.last_update)}</p>
                 
                 {/* Display existing reply if any */}
                 {item.reply && (
