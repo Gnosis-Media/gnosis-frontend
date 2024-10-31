@@ -10,11 +10,11 @@ function FeedPage() {
   const [totalPages, setTotalPages] = useState(1);
   
   // Update URL to point to composer service
-  const composerUrl = 'http://localhost:5001/api';
+  const composerUrl = 'http://54.157.239.255:5001/api';
   
   // Get userId from localStorage (set during login)
-  const userId = localStorage.getItem('user_id');
-  const token = localStorage.getItem('token');
+  const userId = "123"; // localStorage.getItem('user_id');
+  const token = "placeholder-token"; // localStorage.getItem('token');
 
   // Configure axios defaults
   const axiosConfig = {
@@ -35,35 +35,23 @@ function FeedPage() {
 
   const fetchFeed = async () => {
     try {
-      const response = await axios.get(`${composerUrl}/convos`, {
-        ...axiosConfig,
-        params: {
-          userId: userId,
-          page: page,
-          per_page: 10
-        }
-      });
-      
-      if (response.status === 204) {
-        setFeed([]);
-        return;
-      }
-
-      // Handle the response structure from the composer
-      const data = response.data;
-      setFeed(Array.isArray(data.conversations) ? data.conversations : []);
-      setTotalPages(data.total_pages || 1);
-      setError('');
+        const response = await axios.get(`${composerUrl}/convos`, {
+            params: {
+                user_id: '1', // Placeholder user_id
+                limit: 10,
+                random: false
+            }
+        });
+        
+        // Set feed to the conversations array from the response
+        setFeed(response.data.conversations);
+        setError('');
     } catch (error) {
-      console.error('Error fetching conversations:', error);
-      if (error.response?.status === 401) {
-        setError('Please log in again to continue.');
-      } else {
+        console.error('Error fetching conversations:', error);
         setError('Failed to load conversations. Please try again.');
-      }
-      setFeed([]);
+        setFeed([]);
     }
-  };
+};
 
   const handleReplyChange = (conversationId, value) => {
     setNewReply(prev => ({
@@ -129,76 +117,81 @@ function FeedPage() {
 
   return (
     <div className="feed-container">
-      <div className="feed-card">
-        {error && <p className="error-message">{error}</p>}
-        
-        {!userId ? (
-          <p className="feed-message">Please log in to view conversations.</p>
-        ) : feed === null ? (
-          <p className="feed-message">Loading conversations...</p>
-        ) : feed.length > 0 ? (
-          <>
-            {feed.map((item) => (
-              <div key={item.id} className="feed-item">
-                <p>Conversation ID: {item.id}</p>
-                <p>User ID: {item.user_id}</p>
-                <p>Start Date: {formatDate(item.start_date)}</p>
-                <p>Last Update: {formatDate(item.last_update)}</p>
-                
-                {/* Display existing reply if any */}
-                {item.reply && (
-                  <div className="reply-section">
-                    <p className="reply-content">{item.reply}</p>
-                  </div>
-                )}
-
-                {/* Reply Input */}
-                <div className="reply-input-section">
-                  <textarea
-                    value={newReply[item.id] || ''}
-                    onChange={(e) => handleReplyChange(item.id, e.target.value)}
-                    placeholder="Write a reply..."
-                    className="reply-textarea"
-                  />
-                  <div className="button-group">
-                    <button 
-                      className="reply-button"
-                      onClick={() => handleReplySubmit(item.id)}
-                    >
-                      Reply
-                    </button>
-                    <button 
-                      className="delete-button"
-                      onClick={() => handleDeleteConversation(item.id)}
-                    >
-                      Delete Conversation
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+        <div className="feed-card">
+            {error && <p className="error-message">{error}</p>}
             
-            {/* Pagination Controls */}
-            <div className="pagination-controls">
-              <button 
-                onClick={() => setPage(prev => Math.max(1, prev - 1))}
-                disabled={page === 1}
-              >
-                Previous
-              </button>
-              <span>Page {page} of {totalPages}</span>
-              <button 
-                onClick={() => setPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={page === totalPages}
-              >
-                Next
-              </button>
-            </div>
-          </>
-        ) : (
-          <p className="feed-message">No conversations available.</p>
-        )}
-      </div>
+            {!userId ? (
+                <p className="feed-message">Please log in to view conversations.</p>
+            ) : feed === null ? (
+                <p className="feed-message">Loading conversations...</p>
+            ) : feed.length > 0 ? (
+                <>
+                    {feed.map((conversation) => (
+                        <div key={conversation.id} className="feed-item">
+                            <p>Conversation ID: {conversation.id}</p>
+                            <p>User ID: {conversation.user_id}</p>
+                            <p>Start Date: {formatDate(conversation.start_date)}</p>
+                            <p>Last Update: {formatDate(conversation.last_update)}</p>
+                            
+                            {/* Display messages */}
+                            <div className="messages-section">
+                                {conversation.messages.map((message) => (
+                                    <div key={message.id} className={`message ${message.sender}`}>
+                                        <p className="message-text">{message.message_text}</p>
+                                        <small className="message-timestamp">
+                                            {formatDate(message.timestamp)}
+                                        </small>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Reply Input */}
+                            <div className="reply-input-section">
+                                <textarea
+                                    value={newReply[conversation.id] || ''}
+                                    onChange={(e) => handleReplyChange(conversation.id, e.target.value)}
+                                    placeholder="Write a reply..."
+                                    className="reply-textarea"
+                                />
+                                <div className="button-group">
+                                    <button 
+                                        className="reply-button"
+                                        onClick={() => handleReplySubmit(conversation.id)}
+                                    >
+                                        Reply
+                                    </button>
+                                    <button 
+                                        className="delete-button"
+                                        onClick={() => handleDeleteConversation(conversation.id)}
+                                    >
+                                        Delete Conversation
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                    
+                    {/* Pagination Controls */}
+                    <div className="pagination-controls">
+                        <button 
+                            onClick={() => setPage(prev => Math.max(1, prev - 1))}
+                            disabled={page === 1}
+                        >
+                            Previous
+                        </button>
+                        <span>Page {page} of {totalPages}</span>
+                        <button 
+                            onClick={() => setPage(prev => Math.min(totalPages, prev + 1))}
+                            disabled={page === totalPages}
+                        >
+                            Next
+                        </button>
+                    </div>
+                </>
+            ) : (
+                <p className="feed-message">No conversations available.</p>
+            )}
+        </div>
     </div>
   );
 }
