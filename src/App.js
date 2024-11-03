@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
 import UploadPage from './pages/UploadPage';
 import FeedPage from './pages/FeedPage';
 import AuthPage from './pages/AuthPage';
+import ConversationPage from './pages/ConversationPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import './App.css';
 
@@ -45,7 +46,8 @@ function App() {
           {/* Protected Routes that require login */}
           <Route path="/" element={<ProtectedRoute isLoggedIn={isLoggedIn}><FeedPage /></ProtectedRoute>} />
           <Route path="/upload" element={<ProtectedRoute isLoggedIn={isLoggedIn}><UploadPage /></ProtectedRoute>} />
-
+          
+          <Route path="/conversation/:conversationId" element={<ProtectedRoute isLoggedIn={isLoggedIn}><ConversationPage /></ProtectedRoute>} />
           {/* Auth Route */}
           <Route path="/Login/Signup" element={<AuthPage setIsLoggedIn={setIsLoggedIn} />} />
         </Routes>

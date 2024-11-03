@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import './UploadPage.css';
 
 function UploadPage() {
@@ -9,8 +10,18 @@ function UploadPage() {
   const [uploadId, setUploadId] = useState(null);
   const [uploadResult, setUploadResult] = useState(null);
   
-  const composerUrl = 'http://54.157.239.255:5001';
-  const userId = localStorage.getItem('user_id') || '1'; // Fallback to '1' for testing
+  // const composerUrl = 'http://54.157.239.255:5001';
+  const composerUrl = 'http://localhost:5001';
+  const userId = localStorage.getItem('user_id');
+  const token = localStorage.getItem('token');
+
+  const axiosConfig = {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  };
+
+  // console.log(axiosConfig);
 
   useEffect(() => {
     let statusInterval;
@@ -29,8 +40,9 @@ function UploadPage() {
     if (!uploadId) return;
 
     try {
-      const response = await fetch(`${composerUrl}/api/upload_status/${uploadId}`);
-      const data = await response.json();
+      const response = await axios.get(`${composerUrl}/api/upload_status/${uploadId}`, axiosConfig);
+      console.log(response);
+      const data = response.data;
       
       setUploadStatus(data.status);
 
@@ -41,6 +53,7 @@ function UploadPage() {
       } else if (data.status === 'FAILED') {
         setMessage(data.result?.error || 'Upload failed. Please try again.');
         setUploadId(null);
+        setUploadStatus(null);
       }
     } catch (error) {
       console.error('Error checking upload status:', error);
@@ -94,12 +107,8 @@ function UploadPage() {
       setMessage('Starting upload...');
       setUploadStatus('PROCESSING');
 
-      const response = await fetch(`${composerUrl}/api/upload`, {
-        method: 'POST',
-        body: formData
-      });
-
-      const data = await response.json();
+      const response = await axios.post(`${composerUrl}/api/upload`, formData, axiosConfig);
+      const data = response.data;
       
       if (response.status === 202) {
         setUploadId(data.upload_id);

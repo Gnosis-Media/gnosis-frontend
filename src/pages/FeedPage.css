@@ -165,3 +165,29 @@
   text-align: center;
   font-family: 'Roboto', sans-serif;
 }
+
+.feed-item.clickable {
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.feed-item.clickable:hover {
+  background-color: #f5f5f5;
+}
+
+.conversation-preview {
+  padding: 15px;
+}
+
+.conversation-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.message-count {
+  font-size: 0.9em;
+  color: #666;
+  margin-top: 10px;
+  text-align: right;
+}
