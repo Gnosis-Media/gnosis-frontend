@@ -10,7 +10,7 @@ function ConversationPage() {
   const [newReply, setNewReply] = useState('');
   const [error, setError] = useState('');
   
-  const composerUrl = 'http://localhost:5001';
+  const composerUrl = 'http://3.83.44.95:80';
   const userId = localStorage.getItem('user_id');
   const token = localStorage.getItem('token');
 

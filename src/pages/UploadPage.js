@@ -10,8 +10,8 @@ function UploadPage() {
   const [uploadId, setUploadId] = useState(null);
   const [uploadResult, setUploadResult] = useState(null);
   
-  // const composerUrl = 'http://54.157.239.255:5001';
-  const composerUrl = 'http://localhost:5001';
+  
+  const composerUrl = 'http://3.83.44.95:80';
   const userId = localStorage.getItem('user_id');
   const token = localStorage.getItem('token');
 
@@ -23,45 +23,46 @@ function UploadPage() {
 
   // console.log(axiosConfig);
 
+  // Fix the useEffect dependency warning
   useEffect(() => {
+    const checkStatus = async () => {
+      if (!uploadId) return;
+
+      try {
+        const response = await axios.get(`${composerUrl}/api/upload_status/${uploadId}`, axiosConfig);
+        console.log(response);
+        const data = response.data;
+        
+        setUploadStatus(data.status);
+
+        if (data.status === 'COMPLETED') {
+          setMessage('File processed successfully!');
+          setUploadResult(data.result);
+          setUploadId(null);
+        } else if (data.status === 'FAILED') {
+          setMessage(data.result?.error || 'Upload failed. Please try again.');
+          setUploadId(null);
+          setUploadStatus(null);
+        }
+      } catch (error) {
+        console.error('Error checking upload status:', error);
+        setMessage('Error checking upload status');
+        setUploadStatus('FAILED');
+        setUploadId(null);
+      }
+    };
+
     let statusInterval;
     if (uploadId && uploadStatus === 'PROCESSING') {
-      statusInterval = setInterval(checkUploadStatus, 2000);
+      statusInterval = setInterval(checkStatus, 2000);
     }
 
     return () => {
       if (statusInterval) {
         clearInterval(statusInterval);
       }
-    };
-  }, [uploadId, uploadStatus]);
-
-  const checkUploadStatus = async () => {
-    if (!uploadId) return;
-
-    try {
-      const response = await axios.get(`${composerUrl}/api/upload_status/${uploadId}`, axiosConfig);
-      console.log(response);
-      const data = response.data;
-      
-      setUploadStatus(data.status);
-
-      if (data.status === 'COMPLETED') {
-        setMessage('File processed successfully!');
-        setUploadResult(data.result);
-        setUploadId(null);
-      } else if (data.status === 'FAILED') {
-        setMessage(data.result?.error || 'Upload failed. Please try again.');
-        setUploadId(null);
-        setUploadStatus(null);
-      }
-    } catch (error) {
-      console.error('Error checking upload status:', error);
-      setMessage('Error checking upload status');
-      setUploadStatus('FAILED');
-      setUploadId(null);
-    }
-  };
+      };
+    }, [uploadId, uploadStatus, composerUrl, axiosConfig]);
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
