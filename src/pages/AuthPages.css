@@ -88,3 +88,97 @@
 .toggle-auth-button:active {
   transform: scale(0.95); /* Briefly shrink when clicked */
 }
+
+
+/* Updated OAuth styling */
+.oauth-buttons {
+  margin-bottom: 20px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+/* Keep the divider styles */
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 20px 0;
+  color: white;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #ccc;
+}
+
+.divider span {
+  padding: 0 10px;
+}
+
+.auth-message {
+  margin-top: 15px;
+  color: white;
+  font-size: 14px;
+}
+
+
+/*
+.oauth-buttons {
+  margin-bottom: 20px;
+}
+
+.oauth-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  background-color: white;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  font-family: 'Roboto', sans-serif;
+  font-size: 14px;
+}
+
+.oauth-button img {
+  width: 18px;
+  height: 18px;
+}
+
+.oauth-button.google:hover {
+  background-color: #f1f1f1;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 20px 0;
+  color: white;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #ccc;
+}
+
+.divider span {
+  padding: 0 10px;
+}
+
+.auth-message {
+  margin-top: 15px;
+  color: white;
+  font-size: 14px;
+}
+*/
+
+
