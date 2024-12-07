@@ -1,26 +1,13 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import './FeedPage.css';
 
-function FeedPage() {
-  const [feed, setFeed] = useState([]);
-  const [error, setError] = useState('');
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [pullStartY, setPullStartY] = useState(0);
-  const [isPulling, setIsPulling] = useState(false);
-  
-  const feedContainerRef = useRef(null);
-  const lastScrollPosition = useRef(0);
-  const navigate = useNavigate();
-  
-  const composerUrl = 'http://3.83.44.95:80';
+const composerUrl = 'http://54.147.235.198:80';
+
+const FeedPage = () => {
   const userId = localStorage.getItem('user_id');
   const token = localStorage.getItem('token');
+  const ITEMS_PER_PAGE = 20;
 
   const headers = {
     'Authorization': `Bearer ${token}`,
@@ -28,200 +15,206 @@ function FeedPage() {
     'Accept': 'application/json'
   };
 
-  const fetchFeed = async (pageNum, shouldRefresh = false) => {
+  const [conversations, setConversations] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [hasNext, setHasNext] = useState(true);
+  const [nextCursor, setNextCursor] = useState(null);
+  const [endReached, setEndReached] = useState(false);
+  const [initialFetchDone, setInitialFetchDone] = useState(false); // to handle initial load logic
+
+  const navigate = useNavigate();
+  const feedRef = useRef(null);
+
+  const deduplicateAndSetConversations = (newConvos) => {
+    setConversations(prev => {
+      const existingMap = new Map(prev.map(c => [c.id, c]));
+      newConvos.forEach(c => existingMap.set(c.id, c));
+      return Array.from(existingMap.values());
+    });
+  };
+
+  const fetchConversations = useCallback(async (refresh = false) => {
+    if (loading || endReached) return;
+    setLoading(true);
+
     try {
-      console.log(`Fetching page ${pageNum}, refresh: ${shouldRefresh}`);
-      setIsLoading(true);
-      
-      const response = await axios.get(`${composerUrl}/api/convos`, {
-        params: {
-          user_id: userId,
-          limit: 10,
-          page: pageNum,
-          refresh: shouldRefresh
-        },
+      const params = new URLSearchParams({
+        user_id: userId,
+        limit: ITEMS_PER_PAGE.toString(),
+        refresh: refresh.toString(),
+      });
+      if (nextCursor) params.append('cursor', nextCursor);
+
+      const response = await fetch(`${composerUrl}/api/convos?${params.toString()}`, {
+        method: 'GET',
         headers
       });
 
-      const newConversations = response.data.conversations;
-      console.log(`Received ${newConversations.length} conversations for page ${pageNum}`);
-      setTotalPages(response.data.total_pages || 1);
-
-      if (pageNum === 1) {
-        setFeed(newConversations);
-      } else {
-        setFeed(prev => [...prev, ...newConversations]);
+      if (!response.ok) {
+        console.error('Failed to fetch conversations');
+        setLoading(false);
+        return;
       }
-      setError('');
+
+      const data = await response.json();
+
+      // If conversations returned
+      if (data.conversations && data.conversations.length > 0) {
+        deduplicateAndSetConversations(data.conversations);
+        setHasNext(data.has_next);
+        setNextCursor(data.next_cursor);
+        if (!data.has_next) {
+          // No more data after these
+          setEndReached(true);
+        }
+      } else {
+        // No conversations returned
+        if (!initialFetchDone) {
+          // This is the initial fetch and nothing came back.
+          // Attempt batch creation once
+          const batchRes = await fetch(`${composerUrl}/api/composer/batch-convos`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ user_id: userId, num_convos: 10 })
+          });
+
+          if (batchRes.ok) {
+            // Try once more after a short delay
+            await new Promise(res => setTimeout(res, 1500));
+            const retryRes = await fetch(`${composerUrl}/api/convos?${params.toString()}`, {
+              method: 'GET',
+              headers
+            });
+            if (retryRes.ok) {
+              const retryData = await retryRes.json();
+              if (retryData.conversations && retryData.conversations.length > 0) {
+                deduplicateAndSetConversations(retryData.conversations);
+                setHasNext(retryData.has_next);
+                setNextCursor(retryData.next_cursor);
+                if (!retryData.has_next) {
+                  setEndReached(true);
+                }
+              } else {
+                // Still no convos after batch attempt
+                setEndReached(true);
+                setHasNext(false);
+              }
+            } else {
+              setEndReached(true);
+              setHasNext(false);
+            }
+          } else {
+            // Batch creation failed, no convos
+            setEndReached(true);
+            setHasNext(false);
+          }
+        } else {
+          // Not initial fetch, just no new data this time
+          // Means we've reached the end
+          setEndReached(true);
+          setHasNext(false);
+        }
+      }
+
+      setInitialFetchDone(true);
     } catch (error) {
       console.error('Error fetching conversations:', error);
-      setError('Failed to load conversations. Please try again.');
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-      setIsLoadingMore(false);
-    }
-  };
-
-  const handleRefresh = async () => {
-    console.log('Refreshing feed...');
-    setIsRefreshing(true);
-    setPage(1);
-    await fetchFeed(1, true);
-    
-    if (feedContainerRef.current) {
-      feedContainerRef.current.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-    }
-  };
-
-  const handleScroll = useCallback((e) => {
-    const container = e.target;
-    const { scrollTop, scrollHeight, clientHeight } = container;
-    const scrollPercentage = (scrollTop + clientHeight) / scrollHeight * 100;
-    
-    console.log(`Scroll percentage: ${scrollPercentage.toFixed(2)}%`);
-
-    if (scrollPercentage > 70 && !isLoading && !isLoadingMore && page < totalPages) {
-      console.log('Loading more conversations...');
-      setIsLoadingMore(true);
-      setPage(prev => prev + 1);
     }
 
-    lastScrollPosition.current = scrollTop;
-  }, [isLoading, isLoadingMore, page, totalPages]);
-
-  const handleTouchStart = (e) => {
-    const { scrollTop } = feedContainerRef.current;
-    if (scrollTop === 0) {
-      setPullStartY(e.touches[0].clientY);
-      setIsPulling(true);
-    }
-  };
-
-  const handleTouchMove = (e) => {
-    if (!isPulling) return;
-
-    const container = feedContainerRef.current;
-    const touch = e.touches[0];
-    const pullDistance = touch.clientY - pullStartY;
-
-    if (pullDistance > 0 && container.scrollTop === 0) {
-      container.classList.add('pulling');
-      if (pullDistance > 100) {
-        handleRefresh();
-        setIsPulling(false);
-        container.classList.remove('pulling');
-      }
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (isPulling) {
-      feedContainerRef.current.classList.remove('pulling');
-      setIsPulling(false);
-    }
-  };
-
-  const handleLogoClick = useCallback(() => {
-    console.log('Logo clicked, refreshing feed...');
-    handleRefresh();
-  }, []);
+    setLoading(false);
+  }, [userId, headers, nextCursor, loading, endReached, initialFetchDone]);
 
   useEffect(() => {
-    const logo = document.querySelector('.navbar-logo');
-    if (logo) {
-      logo.addEventListener('click', handleLogoClick);
+    // Initial load
+    if (!initialFetchDone) {
+      fetchConversations(true);
     }
-
-    return () => {
-      if (logo) {
-        logo.removeEventListener('click', handleLogoClick);
-      }
-    };
-  }, [handleLogoClick]);
-
-  useEffect(() => {
-    if (!userId) {
-      setError('Please log in to view conversations');
-      return;
-    }
-    console.log(`Page changed to ${page}, fetching new data...`);
-    fetchFeed(page);
-  }, [page, userId]);
-
-  const formatDate = (dateString) => {
-    try {
-      return new Date(dateString).toLocaleString();
-    } catch (error) {
-      return 'Invalid date';
-    }
-  };
+  }, [fetchConversations, initialFetchDone]);
 
   const handleConversationClick = (conversationId) => {
     navigate(`/conversation/${conversationId}`);
   };
 
-  return (
-    <div 
-      className="feed-container"
-      ref={feedContainerRef}
-      onScroll={handleScroll}
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-    >
-      {isRefreshing && (
-        <div className="refresh-indicator">
-          Refreshing your feed...
-        </div>
-      )}
+  const handleScroll = () => {
+    if (!feedRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = feedRef.current;
 
-      <div className="feed-card">
-        {error && <p className="error-message">{error}</p>}
-        
-        {!userId ? (
-          <p className="feed-message">Please log in to view conversations.</p>
-        ) : feed.length === 0 && !isLoading ? (
-          <p className="feed-message">No conversations available.</p>
-        ) : (
-          <>
-            {feed.map((conversation) => (
-              <div 
-                key={conversation.id} 
-                className="feed-item clickable"
-                onClick={() => handleConversationClick(conversation.id)}
-              >
-                <div className="conversation-preview">
-                  <div className="conversation-header">
-                    <span className="conversation-date">
-                      {formatDate(conversation.start_date)}
-                    </span>
-                  </div>
-                  {conversation.messages && conversation.messages.length > 0 && (
-                    <div className={`message ${conversation.messages[0].sender}`}>
-                      <p className="message-text">{conversation.messages[0].message_text}</p>
-                    </div>
-                  )}
-                  <div className="message-count">
-                    {conversation.messages.length} messages
-                  </div>
-                </div>
-              </div>
-            ))}
-            
-            {(isLoading || isLoadingMore) && (
-              <div className="loading-indicator">
-                Loading more conversations...
-              </div>
-            )}
-          </>
+    // Only load more if close to the bottom and we have more data to load
+    if (
+      hasNext &&
+      !loading &&
+      !endReached &&
+      scrollHeight - scrollTop - clientHeight < 300 // within 300px of the bottom
+    ) {
+      fetchConversations(false);
+    }
+  };
+
+  const shuffle_and_reload = async () => {
+    try {
+      const shuffleResponse = await fetch(`${composerUrl}/api/composer/shuffle-convos`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          user_id: userId            
+        })
+      });
+
+      if (!shuffleResponse.ok) {
+        console.error('Failed to shuffle conversations');
+      }
+
+      // Reload only after shuffle is complete
+      window.location.reload();
+    } catch (error) {
+      console.error('Failed to shuffle conversations:', error);
+      // Optionally reload even if there's an error
+      window.location.reload();
+    }
+  };
+
+  return (
+    <div className="feed-container">
+      <div className="feed-nav">
+      <button 
+        className="feed-header-button" 
+        onClick={shuffle_and_reload}
+      >
+        Discover
+      </button>
+    </div>
+      <div className="feed-content" ref={feedRef} onScroll={handleScroll}>
+        {conversations.map((convo) => (
+          <div 
+            key={convo.id} 
+            className="conversation-item" 
+            onClick={() => handleConversationClick(convo.id)}
+          >
+            <div className="conversation-title">
+            {convo.ai_profile?.display_name} {' '}            
+            <span className="author-name">
+               {convo.ai_profile?.name}
+            </span>
+          </div>
+            <div className="conversation-preview">
+              {convo.messages && convo.messages.length > 0 
+                ? `${convo.messages[0].message_text.substring(0,300)}...` 
+                : 'No messages yet'}
+            </div>
+          </div>
+        ))}
+
+        {loading && <div className="loading-indicator">Loading...</div>}
+
+        {endReached && !loading && (
+          <div className="end-message">
+            <div>You've reached the end, click the button below to go to the top</div>
+            <button onClick={shuffle_and_reload}>Go to top</button>
+          </div>
         )}
       </div>
     </div>
   );
-}
+};
 
 export default FeedPage;

@@ -11,7 +11,7 @@ function UploadPage() {
   const [uploadResult, setUploadResult] = useState(null);
   
   
-  const composerUrl = 'http://3.83.44.95:80';
+  const composerUrl = 'http://54.147.235.198:80';
   const userId = localStorage.getItem('user_id');
   const token = localStorage.getItem('token');
 
