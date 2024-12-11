@@ -6,7 +6,7 @@ import React from 'react';
 import { GoogleLogin } from '@react-oauth/google';
 import { useNavigate } from 'react-router-dom';
 
-const GoogleOAuthButton = ({ composerUrl, setMessage, setIsLoggedIn }) => {
+const GoogleOAuthButton = ({ composerUrl, setMessage, setIsLoggedIn, API_KEY }) => {
   const navigate = useNavigate();
   
   // Determine the base URL based on environment
@@ -14,47 +14,53 @@ const GoogleOAuthButton = ({ composerUrl, setMessage, setIsLoggedIn }) => {
     ? 'http://localhost:3000'
     : 'http://gnosis-frontend-app-w4153.s3-website-us-east-1.amazonaws.com';
 
-  const handleSuccess = async (credentialResponse) => {
-    console.log('Google login successful, credential received:', credentialResponse);
+    const handleSuccess = async (credentialResponse) => {
+      console.log('Google login successful, credential received:', credentialResponse);
+      
+      try {
+        console.log('Sending credential to backend:', composerUrl + '/api/auth/google');
+        const response = await fetch(`${composerUrl}/api/auth/google`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': `Bearer ${credentialResponse.credential}`,
+            'X-API-KEY': API_KEY
+          },
+          body: JSON.stringify({
+            credential: credentialResponse.credential,
+          }),
+        });
     
-    try {
-      console.log('Sending credential to backend:', composerUrl + '/api/auth/google');
-      const response = await fetch(`${composerUrl}/api/auth/google`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${credentialResponse.credential}` // Add the credential as a Bearer token
-        },
-        body: JSON.stringify({
-          credential: credentialResponse.credential,
-        }),
-        //credentials: 'include' // Add this to handle cookies if needed
-      });
-
-      console.log('Backend response status:', response.status);
-      const data = await response.json();
-      console.log('Backend response data:', data);
-
-      if (response.status === 200 || response.status === 201) {
-        localStorage.setItem('token', data.token);
-        if (data.username) localStorage.setItem('username', data.username);
-        if (data.user_id) localStorage.setItem('user_id', data.user_id);
-        setIsLoggedIn(true);
-        navigate('/');
-      } else {
-        console.error('Backend error:', data);
-        setMessage(data.error || 'Server responded with an error. Please try again.');
+        console.log('Backend response status:', response.status);
+        const data = await response.json();
+        console.log('Backend response data:', data);
+    
+        if (response.status === 200 || response.status === 201) {
+          localStorage.setItem('token', data.token);
+          if (data.user.username) {
+            localStorage.setItem('username', data.user.username);
+            console.log('Username set in localStorage:', data.user.username);
+          }
+          if (data.user.id) {
+            localStorage.setItem('user_id', data.user.id);
+            console.log('User ID set in localStorage:', data.user.id);
+          }          
+          setIsLoggedIn(true);
+          navigate('/');
+        } else {
+          console.error('Backend error:', data);
+          setMessage(data.error || 'Server responded with an error. Please try again.');
+        }
+      } catch (error) {
+        console.error('Full error details:', error);
+        console.error('Error making request to backend:', {
+          error: error.message,
+          stack: error.stack
+        });
+        setMessage('Could not connect to the server. Please check your connection and try again.');
       }
-    } catch (error) {
-      console.error('Full error details:', error);
-      console.error('Error making request to backend:', {
-        error: error.message,
-        stack: error.stack
-      });
-      setMessage('Could not connect to the server. Please check your connection and try again.');
-    }
-  };
+    };
 
   const handleError = (error) => {
     console.error('Google login error:', error);

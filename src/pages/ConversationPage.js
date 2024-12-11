@@ -10,14 +10,17 @@ function ConversationPage() {
   const [newReply, setNewReply] = useState('');
   const [error, setError] = useState('');
   
-  const composerUrl = 'http://54.147.235.198:80';
+  // const composerUrl = 'http://54.147.235.198:80';
+  const composerUrl = process.env.REACT_APP_COMPOSER_URL;
+  const API_KEY = process.env.REACT_APP_API_KEY;
   const userId = localStorage.getItem('user_id');
   const token = localStorage.getItem('token');
 
   const headers = {
     'Authorization': `Bearer ${token}`,
     'Content-Type': 'application/json',
-    'Accept': 'application/json'
+    'Accept': 'application/json',
+    'X-API-KEY': API_KEY
   };
 
   const axiosConfig = { headers };

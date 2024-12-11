@@ -11,13 +11,16 @@ function UploadPage() {
   const [uploadResult, setUploadResult] = useState(null);
   
   
-  const composerUrl = 'http://54.147.235.198:80';
+  // const composerUrl = 'http://54.147.235.198:80';
+  const composerUrl = process.env.REACT_APP_COMPOSER_URL;
+  const API_KEY = process.env.REACT_APP_API_KEY;
   const userId = localStorage.getItem('user_id');
   const token = localStorage.getItem('token');
 
   const axiosConfig = {
     headers: {
-      'Authorization': `Bearer ${token}`
+      'Authorization': `Bearer ${token}`,
+      'X-API-KEY': API_KEY
     }
   };
 
@@ -103,6 +106,8 @@ function UploadPage() {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('user_id', userId);
+
+    console.log(formData);
 
     try {
       setMessage('Starting upload...');

@@ -11,7 +11,11 @@ function AuthPage({ setIsLoggedIn }) { // Add setIsLoggedIn prop
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
-  const composerUrl = 'http://localhost:5000';  // use this for prod: http://54.147.235.198:80 
+  const API_KEY = process.env.REACT_APP_API_KEY;
+  // const composerUrl = 'http://54.147.235.198:80'; 
+  const composerUrl = process.env.REACT_APP_COMPOSER_URL;
+  // console.log(composerUrl);
+  // console.log(API_KEY);
   const navigate = useNavigate();
   const GOOGLE_CLIENT_ID = "828323748695-mtijpl2s00v32vsnfag4ubfbmjara52n.apps.googleusercontent.com";
 
@@ -42,7 +46,8 @@ function AuthPage({ setIsLoggedIn }) { // Add setIsLoggedIn prop
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          'Accept': 'application/json',
+          'X-API-KEY': API_KEY
         },
         body: JSON.stringify(payload),
       });
@@ -77,9 +82,7 @@ function AuthPage({ setIsLoggedIn }) { // Add setIsLoggedIn prop
             <img src="/logo.png" alt="App Logo" style={{ width: '100px', height: 'auto' }} />
           </h2>
           
-          <GoogleOAuthButton composerUrl={composerUrl} setMessage={setMessage} setIsLoggedIn={setIsLoggedIn} // Pass setIsLoggedIn to GoogleOAuthButton
-
-          />
+          <GoogleOAuthButton composerUrl={composerUrl} setMessage={setMessage} setIsLoggedIn={setIsLoggedIn} API_KEY={API_KEY} />
           
           <div className="divider">
             <span>OR</span>

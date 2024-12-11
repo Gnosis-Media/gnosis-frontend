@@ -2,18 +2,24 @@ import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './FeedPage.css';
 
-const composerUrl = 'http://54.147.235.198:80';
+// const composerUrl = 'http://54.147.235.198:80';
+const composerUrl = process.env.REACT_APP_COMPOSER_URL;
+const API_KEY = process.env.REACT_APP_API_KEY;
 
 const FeedPage = () => {
   const userId = localStorage.getItem('user_id');
   const token = localStorage.getItem('token');
   const ITEMS_PER_PAGE = 20;
+  const [error, setError] = useState(null);
 
   const headers = {
     'Authorization': `Bearer ${token}`,
     'Content-Type': 'application/json',
-    'Accept': 'application/json'
+    'Accept': 'application/json',
+    'X-API-KEY': API_KEY
   };
+
+  console.log(headers);
 
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -36,6 +42,7 @@ const FeedPage = () => {
   const fetchConversations = useCallback(async (refresh = false) => {
     if (loading || endReached) return;
     setLoading(true);
+    setError(null);
 
     try {
       const params = new URLSearchParams({
@@ -52,6 +59,8 @@ const FeedPage = () => {
 
       if (!response.ok) {
         console.error('Failed to fetch conversations');
+        setError('Failed to fetch conversations');
+        setEndReached(true);
         setLoading(false);
         return;
       }
@@ -113,12 +122,17 @@ const FeedPage = () => {
           // Means we've reached the end
           setEndReached(true);
           setHasNext(false);
+          if (!initialFetchDone) {
+            setError('No conversations found');
+          }
         }
       }
 
       setInitialFetchDone(true);
     } catch (error) {
       console.error('Error fetching conversations:', error);
+      setError('Error fetching conversations');
+      setEndReached(true);
     }
 
     setLoading(false);
@@ -176,41 +190,52 @@ const FeedPage = () => {
   return (
     <div className="feed-container">
       <div className="feed-nav">
-      <button 
-        className="feed-header-button" 
-        onClick={shuffle_and_reload}
-      >
-        Discover
-      </button>
-    </div>
+        <button 
+          className="feed-header-button" 
+          onClick={shuffle_and_reload}
+        >
+          Discover
+        </button>
+      </div>
       <div className="feed-content" ref={feedRef} onScroll={handleScroll}>
-        {conversations.map((convo) => (
-          <div 
-            key={convo.id} 
-            className="conversation-item" 
-            onClick={() => handleConversationClick(convo.id)}
-          >
-            <div className="conversation-title">
-            {convo.ai_profile?.display_name} {' '}            
-            <span className="author-name">
-               {convo.ai_profile?.name}
-            </span>
+        {error ? (
+          <div className="error-message">
+            {error}
+            <button onClick={() => window.location.reload()} className="retry-button">
+              Refresh Page
+            </button>
           </div>
-            <div className="conversation-preview">
-              {convo.messages && convo.messages.length > 0 
-                ? `${convo.messages[0].message_text.substring(0,300)}...` 
-                : 'No messages yet'}
-            </div>
-          </div>
-        ))}
+        ) : (
+          <>
+            {conversations.map((convo) => (
+              <div 
+                key={convo.id} 
+                className="conversation-item" 
+                onClick={() => handleConversationClick(convo.id)}
+              >
+                <div className="conversation-title">
+                  {convo.ai_profile?.display_name} {' '}            
+                  <span className="author-name">
+                    {convo.ai_profile?.name}
+                  </span>
+                </div>
+                <div className="conversation-preview">
+                  {convo.messages && convo.messages.length > 0 
+                    ? `${convo.messages[0].message_text.substring(0,300)}...` 
+                    : 'No messages yet'}
+                </div>
+              </div>
+            ))}
 
-        {loading && <div className="loading-indicator">Loading...</div>}
+            {loading && <div className="loading-indicator">Loading...</div>}
 
-        {endReached && !loading && (
-          <div className="end-message">
-            <div>You've reached the end, click the button below to go to the top</div>
-            <button onClick={shuffle_and_reload}>Go to top</button>
-          </div>
+            {endReached && !loading && (
+              <div className="end-message">
+                <div>You've reached the end, click the button below to go to the top</div>
+                <button onClick={shuffle_and_reload}>Go to top</button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
